@@ -68,14 +68,10 @@ func GetCustomer(c *gin.Context) {
 	
 	paramId := c.Param("id")
 	fmt.Println(paramId)
-	db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
-	if err != nil {
-		log.Fatal("Connect to database error", err)
-	}
-	defer db.Close()
 	stmt, err := db.Prepare("Select id , name, email, status FROM customers where id=$1")
 	if err != nil {
-		log.Fatal("cannot prepare query one row statement", err)
+		c.JSON(http.StatusInternalServerError, err)
+		return
 	}
 	rowId := paramId
 	row := stmt.QueryRow(rowId)
@@ -84,7 +80,8 @@ func GetCustomer(c *gin.Context) {
 
 	err = row.Scan(&id, &name, &email, &status)
 	if err != nil {
-		log.Fatal("cannot scan row into desired variables", err)
+		c.JSON(http.StatusInternalServerError, err)
+		return
 	}
 	customer := Customer{id, name, email, status}
 	c.JSON(http.StatusOK, customer)
@@ -93,11 +90,6 @@ func GetCustomer(c *gin.Context) {
 func GetCustomers(c *gin.Context) {
 	// customers := []Customer{}
 	var customers []Customer
-	db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
-	if err != nil {
-		log.Fatal("Connect to database error", err)
-	}
-	defer db.Close()
 	stmt, err := db.Prepare("Select id , name, email, status FROM customers ")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err)
@@ -125,13 +117,6 @@ func GetCustomers(c *gin.Context) {
 func UpdateCustomers(c *gin.Context) {
 	paramId := c.Param("id")
 	fmt.Println(paramId)
-
-	db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
-	if err != nil {
-		log.Fatal("Connect to database error", err)
-	}
-	defer db.Close()
-
 	stmt, err := db.Prepare("SELECT id, name, email, status FROM customers where id=$1")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err)
@@ -163,11 +148,6 @@ func UpdateCustomers(c *gin.Context) {
 
 func DeleteCustomer(c *gin.Context) {
 	paramId := c.Param("id")
-	db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
-	if err != nil {
-		log.Fatal("Database connection error", err)
-	}
-	defer db.Close()
 	stmt, err := db.Prepare("DELETE FROM customers WHERE id=$1")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err)
